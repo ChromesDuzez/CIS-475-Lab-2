@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System - Publishers</title>
+    <link rel="stylesheet" href="/public/style.css">
+
+</head>
+
+<body>
+    <ul>
+        <li><a href="users.html">Users</a></li>
+        <li><a href="loans.html">Loans</a></li>
+        <li><a href="books.html">Books</a></li>
+        <li><a href="publishers.html">Publishers</a></li>
+        <li><a href="authors.html">Authors</a></li>
+    </ul>
+
+    <h1>Publishers</h1>
+
+    <h2>Add Publisher</h2>
+    <form id="addPublisherForm">
+        <input type="text" id="id" placeholder="ID" required>
+        <input type="text" id="name" placeholder="Publisher Name" required>
+        <input type="text" id="address" placeholder="Publisher Address" required>
+        <input type="text" id="contact_email" placeholder="Publisher Email" required>
+        <button type="submit">Add Publisher</button>
+    </form>
+
+    <h2>Publishers List</h2>
+    <table id="publishersTable" border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Email</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="publishersTableBody">
+        </tbody>
+    </table>
+
+    <script>
+        async function fetchData(url) {
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                console.log(`Fetched data from ${url}:`, data);
+                return data;
+            } catch (error) {
+                console.log(`Error fetching data from ${url}:`, error);
+                throw error;
+            }
+        }
+
+        async function removePublisher(publisher_id) {
+            const response = await fetch(`/api/publishers/${publisher_id}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+            console.log(result.message);
+
+            loadPublishers();
+        }
+
+        async function addPublisher(event) {
+            event.preventDefault();
+            const id = document.getElementById('id').value;
+            const name = document.getElementById('name').value;
+            const address = document.getElementById('address').value;
+            const contact_email = document.getElementById('contact_email').value;
+
+            console.log(`Adding publisher: ${name}`);
+
+            const response = await fetch('/api/publishers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, address, contact_email }),
+            });
+
+            const result = await response.json();
+            console.log(result.message);
+
+            loadPublishers();
+        }
+
+        async function loadPublishers() {
+            const publishers = await fetchData('/api/publishers');
+            const publishersTableBody = document.getElementById('publishersTableBody');
+            publishersTableBody.innerHTML = '';
+
+            publishers.forEach(publisher => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${publisher.publisher_id}</td>
+                    <td>${publisher.NAME}</td>
+                    <td>${publisher.address}</td>
+                    <td>${publisher.contact_email}</td>
+                    <td><button class="removeButton" onclick="removePublisher(${publisher.publisher_id})">Remove</button></td>
+                `;
+                publishersTableBody.appendChild(row);
+            });
+        }
+
+        document.getElementById('addPublisherForm').addEventListener('submit', addPublisher);
+
+        async function main() {
+            await loadPublishers();
+        }
+
+        main();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System - Loans</title>
+    <link rel="stylesheet" href="/public/style.css">
+
+</head>
+
+<body>
+    <ul>
+        <li><a href="users.html">Users</a></li>
+        <li><a href="loans.html">Loans</a></li>
+        <li><a href="books.html">Books</a></li>
+        <li><a href="publishers.html">Publishers</a></li>
+        <li><a href="authors.html">Authors</a></li>
+    </ul>
+
+    <h1>Book Loans</h1>
+
+    <h2>Check Out Book</h2>
+    <form id="checkOutForm">
+        <input type="text" id="id" placeholder="ID" required>
+        <label for="availableBooks">Book</label>
+        <select id="availableBooks"></select>
+        <label for="libraryMembers">Patron</label>
+        <select id="libraryMembers"></select>
+        <input type="date" id="loanDate" placeholder="Loan Date" required>
+        <input type="date" id="dueDate" placeholder="Due Date" required>
+        <button type="submit">Check Out</button>
+    </form>
+
+    <form id="checkOutForm">
+        <!-- Rest of the form elements -->
+    </form>
+
+    <h3>Current Loans</h3>
+    <table id="loansTable" border="1">
+        <thead>
+            <tr>
+                <th>Loan ID</th>
+                <th>Book</th>
+                <th>Patron</th>
+                <th>Loan Date</th>
+                <th>Due Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="loansTableBody">
+        </tbody>
+    </table>
+
+    <h3>Available Books</h3>
+    <table id="availableBooksTable" border="1">
+        <thead>
+            <tr>
+                <th>Book ID</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Publisher</th>
+            </tr>
+        </thead>
+        <tbody id="availableBooksTableBody">
+        </tbody>
+    </table>
+
+    <script>
+        async function fetchData(url) {
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                console.log(`Fetched data from ${url}:`, data);
+                return data;
+            } catch (error) {
+                console.log(`Error fetching data from ${url}:`, error);
+                throw error;
+            }
+        }
+
+
+        async function loadAvailableBooks() {
+            const availableBooks = await fetchData('/api/books/True');
+            const availableBooksSelect = document.getElementById('availableBooks');
+            console.log("loading books")
+            availableBooksSelect.innerHTML = '';
+            availableBooks.forEach(book => {
+                const option = document.createElement('option');
+                option.value = book.book_id;
+
+                option.textContent = `${book.title} by ${book.NAME}`;
+                availableBooksSelect.appendChild(option);
+            });
+            console.log("done loading books")
+
+            const availableBooksTable = document.getElementById('availableBooksTable');
+
+            availableBooks.forEach(book => {
+                const row = document.createElement('tr');
+                console.log(book)
+                row.innerHTML = `
+          <td>${book.book_id}</td>
+          <td>${book.title}</td>
+          <td>${book.NAME}</td>
+          <td>${book.publisher_name}</td>
+        `;
+                availableBooksTable.appendChild(row);
+            });
+
+
+        }
+
+        async function loadLibraryMembers() {
+            try {
+                console.log("loading library members");
+                const patrons = await fetchData('/api/patrons');
+                console.log("loaded patrons")
+                console.log("patrons:", patrons);
+                const libraryMembersSelect = document.getElementById('libraryMembers');
+                libraryMembersSelect.innerHTML = '';
+                patrons.forEach(patron => {
+                    const option = document.createElement('option');
+                    option.value = patron.member_id;
+                    option.textContent = `${patron.NAME} (${patron.email})`;
+                    console.log(option.textContent)
+                    libraryMembersSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.log("Error loading library members:", error);
+            }
+        }
+
+        async function loadLoans() {
+            try {
+                console.log("Loading loans")
+                const loans = await fetchData('/api/loans');
+                const loansTableBody = document.getElementById('loansTableBody');
+                loansTableBody.innerHTML = '';
+                loans.forEach(loan => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+          <td>${loan.loan_id}</td>
+          <td>${loan.title}</td>
+          <td>${loan.name}</td>
+          <td>${loan.loan_date}</td>
+          <td>${loan.due_date}</td>
+          <td><button class="returnButton" data-loan-id="${loan.loan_id}" onclick="checkInBook(this)">Return</button></td>
+        `;
+                    loansTableBody.appendChild(row);
+                });
+
+                const loanedBooksSelect = document.getElementById('loanedBooks');
+                loanedBooksSelect.innerHTML = '';
+                loans.forEach(loan => {
+
+                    const option = document.createElement('option');
+                    option.value = loan.loan_id;
+                    option.textContent = `${loan.loan_id}`;
+                    console.log(option.textContent)
+                    loanedBooksSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+
+        async function checkOutBook(event) {
+            event.preventDefault();
+            const id = document.getElementById('id').value;
+            const book_id = document.getElementById('availableBooks').value;
+            const member_id = document.getElementById('libraryMembers').value;
+            const loan_date = document.getElementById('loanDate').value;
+            const due_date = document.getElementById('dueDate').value;
+
+            const response = await fetch('/api/loans', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ book_id, member_id, loan_date, due_date }),
+            });
+
+            const result = await response.json();
+            console.log(result.message);
+
+            loadAvailableBooks();
+            loadLoans();
+        }
+
+        async function checkInBook(button) {
+            console.log("checking in book")
+            const loan_id = button.getAttribute('data-loan-id');
+            const return_date = new Date().toISOString().split('T')[0];
+
+            const response = await fetch(`/api/loans/${loan_id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ return_date }),
+            });
+
+            const result = await response.json();
+            console.log(result.message);
+
+            loadAvailableBooks();
+            loadLoans();
+        }
+
+
+        async function main() {
+            await Promise.all([
+                loadLibraryMembers(),
+                loadLoans(),
+                loadAvailableBooks(),
+
+            ]);
+        }
+
+        main();
+    </script>
+</body>
+
+</html>

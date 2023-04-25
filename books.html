@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System - Books</title>
+    <link rel="stylesheet" href="/public/style.css">
+
+</head>
+
+<body>
+    <ul>
+        <li><a href="users.html">Users</a></li>
+        <li><a href="loans.html">Loans</a></li>
+        <li><a href="books.html">Books</a></li>
+        <li><a href="publishers.html">Publishers</a></li>
+        <li><a href="authors.html">Authors</a></li>
+    </ul>
+
+    <h1>Books</h1>
+
+    <h2>Add Book</h2>
+    <form id="addBookForm">
+        <input type="text" id="id" placeholder="ID" required>
+        <input type="text" id="title" placeholder="Title" required>
+        <input type="text" id="author" placeholder="Author" required>
+        <input type="text" id="publisher" placeholder="Publisher" required>
+        <input type="text" id="publication_year" placeholder="Publication Year" required>
+        <input type="text" id="isbn" placeholder="ISBN" required>
+        <button type="submit">Add Book</button>
+    </form>
+
+    <h2>Books List</h2>
+    <table id="booksTable" border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Publisher</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="booksTableBody">
+        </tbody>
+    </table>
+
+
+    <script>
+        async function fetchData(url) {
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                console.log(`Fetched data from ${url}:`, data);
+                return data;
+            } catch (error) {
+                console.log(`Error fetching data from ${url}:`, error);
+                throw error;
+            }
+        }
+
+        async function removeBook(book_id) {
+            const response = await fetch(`/api/books/${book_id}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+            console.log(result.message);
+
+            loadBooks();
+        }
+
+        async function addBook(event) {
+            event.preventDefault();
+            const id = document.getElementById('id').value;
+            const title = document.getElementById('title').value;
+            const author = document.getElementById('author').value;
+            const publisher = document.getElementById('publisher').value;
+            const publication_year = document.getElementById('publication_year').value;
+            const isbn = document.getElementById('isbn').value;
+
+            console.log(`Adding book: ${title} by ${author} published by ${publisher}`)
+
+            const response = await fetch('/api/books', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, title, author, publisher, publication_year, isbn }),
+            });
+
+            const result = await response.json();
+            console.log(result.message);
+
+            loadBooks();
+        }
+
+        async function loadBooks() {
+            const books = await fetchData('/api/books/False');
+            const booksTableBody = document.getElementById('booksTableBody');
+            booksTableBody.innerHTML = '';
+
+            books.forEach(book => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${book.book_id}</td>
+                    <td>${book.title}</td>
+                    <td>${book.NAME}</td>
+                    <td>${book.publisher_name}</td>
+                    <td><button class="removeButton" onclick="removeBook(${book.book_id})">Remove</button></td>
+                `;
+                booksTableBody.appendChild(row);
+            });
+        }
+
+        async function loadPublishers() {
+            const publishers = await fetchData('/api/publishers');
+            const publisherSelect = document.createElement('select');
+            publisherSelect.id = 'publisher';
+            publisherSelect.required = true;
+            const publisherOption = document.createElement('option');
+            publisherOption.value = '';
+            publisherOption.textContent = 'Select Publisher';
+            publisherSelect.appendChild(publisherOption);
+
+            publishers.forEach(publisher => {
+                
+                const option = document.createElement('option');
+                option.value = publisher.publisher_id;
+                option.textContent = publisher.NAME;
+                publisherSelect.appendChild(option);
+            });
+
+            const addBookForm = document.getElementById('addBookForm');
+            const publisherInput = document.getElementById('publisher');
+            addBookForm.replaceChild(publisherSelect, publisherInput);
+        }
+
+        async function loadAuthors(){
+            const authors = await fetchData('/api/authors');
+            const authorSelect = document.createElement('select');
+            authorSelect.id = 'author';
+            authorSelect.required = true;
+            const authorOption = document.createElement('option');
+            authorOption.value = '';
+            authorOption.textContent = 'Select Author';
+            authorSelect.appendChild(authorOption);
+
+            authors.forEach(author => {
+                const option = document.createElement('option');
+                option.value = author.author_id;
+                option.textContent = author.NAME;
+                authorSelect.appendChild(option);
+            });
+
+            const addBookForm = document.getElementById('addBookForm');
+            const authorInput = document.getElementById('author');
+            addBookForm.replaceChild(authorSelect, authorInput);
+
+            
+        }
+
+
+
+        document.getElementById('addBookForm').addEventListener('submit', addBook);
+
+        async function main() {
+            await Promise.all([
+                loadBooks(),
+                loadPublishers(),
+                loadAuthors(),
+            ]);
+        }
+
+        main();
+    </script>
+</body>
+
+</html>

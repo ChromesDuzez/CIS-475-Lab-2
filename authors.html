@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System - Authors</title>
+    <link rel="stylesheet" href="/public/style.css">
+
+</head>
+
+<body>
+    <ul>
+        <li><a href="users.html">Users</a></li>
+        <li><a href="loans.html">Loans</a></li>
+        <li><a href="books.html">Books</a></li>
+        <li><a href="publishers.html">Publishers</a></li>
+        <li><a href="authors.html">Authors</a></li>
+    </ul>
+
+    <h1>Authors</h1>
+
+    <h2>Add Author</h2>
+    <form id="addAuthorForm">
+        <input type="text" id="id" placeholder="ID" required>
+        <input type="text" id="name" placeholder="Author Name" required>
+        <input type="number" id="birth_year" placeholder="Birth Year" required>
+        <input type="text" id="nationality" placeholder="Nationality" required>
+        <button type="submit">Add Author</button>
+    </form>
+
+    <h2>Authors List</h2>
+    <table id="authorsTable" border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Birth Year</th>
+                <th>Nationality</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="authorsTableBody">
+        </tbody>
+    </table>
+
+    <script>
+        async function fetchData(url) {
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                console.log(`Fetched data from ${url}:`, data);
+                return data;
+            } catch (error) {
+                console.log(`Error fetching data from ${url}:`, error);
+                throw error;
+            }
+        }
+
+        async function removeAuthor(author_id) {
+            const response = await fetch(`/api/authors/${author_id}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+            console.log(result.message);
+
+            loadAuthors();
+        }
+
+        async function addAuthor(event) {
+            event.preventDefault();
+            const id = document.getElementById('id').value;
+            const name = document.getElementById('name').value;
+            const birth_year = document.getElementById('birth_year').value;
+            const nationality = document.getElementById('nationality').value;
+
+            console.log(`Adding author: ${name}, Birth Year: ${birth_year}, Nationality: ${nationality}`)
+
+            const response = await fetch('/api/authors', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, birth_year, nationality }),
+            });
+
+            const result = await response.json();
+            console.log(result.message);
+
+            loadAuthors();
+        }
+
+        async function loadAuthors() {
+            const authors = await fetchData('/api/authors');
+            const authorsTableBody = document.getElementById('authorsTableBody');
+            authorsTableBody.innerHTML = '';
+
+            authors.forEach(author => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${author.author_id}</td>
+                    <td>${author.NAME}</td>
+                    <td>${author.birth_year}</td>
+                    <td>${author.nationality}</td>
+                    <td><button class="removeButton" onclick="removeAuthor(${author.author_id})">Remove</button></td>
+                `;
+                authorsTableBody.appendChild(row);
+            });
+        }
+
+        document.getElementById('addAuthorForm').addEventListener('submit', addAuthor);
+
+        async function main() {
+            await loadAuthors();
+        }
+
+        main();
+    </script>
+</body>
+
+</html>

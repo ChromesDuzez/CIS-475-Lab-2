@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System - Register Patron</title>
+    <link rel="stylesheet" href="/public/style.css">
+
+</head>
+
+<body>
+    <ul>
+        <li><a href="users.html">Users</a></li>
+        <li><a href="loans.html">Loans</a></li>
+        <li><a href="books.html">Books</a></li>
+        <li><a href="publishers.html">Publishers</a></li>
+        <li><a href="authors.html">Authors</a></li>
+    </ul>
+
+    <h1>Register a New Patron</h1>
+    <form id="registerForm">
+        <label for="id">ID</label>
+        <input type="text" id="id" placeholder="ID" required>
+        <label for="name">Name</label>
+        <input type="text" id="name" placeholder="Name" required>
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="Email" required>
+        <label for="phone">Phone</label>
+        <input type="tel" id="phone" placeholder="Phone" required>
+        <label for="membership_date">Membership Date</label>
+        <input type="date" id="membership_date" placeholder="Membership Date" required>
+        <button type="submit">Register</button>
+    </form>
+    <div id="result"></div>
+
+    <h1>Registered Patrons</h1>
+    <div>
+        <table id="patronsTable" border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Membership Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="patronsTableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+
+        async function removePatron(member_id) {
+            const response = await fetch(`/api/patrons/${member_id}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+            console.log(result.message);
+
+            loadPatrons();
+        }
+
+        async function loadPatrons() {
+            const response = await fetch('/api/patrons');
+            const patrons = await response.json();
+            const patronsTableBody = document.getElementById('patronsTableBody');
+
+            patronsTableBody.innerHTML = '';
+
+            patrons.forEach(patron => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+      <td>${patron.member_id}</td>
+      <td>${patron.NAME}</td>
+      <td>${patron.email}</td>
+      <td>${patron.phone}</td>
+      <td>${patron.membership_date}</td>
+      <td><button class="removeButton" onclick="removePatron(${patron.member_id})">Remove</button></td>
+    `;
+                patronsTableBody.appendChild(row);
+            });
+        }
+
+
+
+
+        const form = document.getElementById('registerForm');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const id = document.getElementById('id').value;
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const membership_date = document.getElementById('membership_date').value;
+
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, email, phone, membership_date })
+            });
+
+            const result = await response.json();
+            resultDiv.textContent = result.message;
+        });
+
+        loadPatrons();
+    </script>
+</body>
+
+</html>
