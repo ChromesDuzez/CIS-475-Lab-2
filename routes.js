@@ -121,8 +121,8 @@ router.post('/books', (req, res) => {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
-    const query = 'INSERT INTO Books (title, author_id, publisher_id, publication_year, isbn) VALUES (?, ?, ?, ?, ?)';
-    const values = [title, author, publisher, publication_year, isbn];
+    const query = 'INSERT INTO Books (book_id, title, author_id, publisher_id, publication_year, isbn) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE title=?, author_id=?, publisher_id=?, publication_year=?, isbn=?';
+    const values = [id, title, author, publisher, publication_year, isbn, title, author, publisher, publication_year, isbn];
 
     req.pool.getConnection((error, connection) => {
         if (error) {
