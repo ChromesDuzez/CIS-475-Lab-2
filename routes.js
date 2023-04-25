@@ -2,13 +2,13 @@ const express = require('express');
 const router = express.Router();
 
 router.post('/register', (req, res) => {
-    const { name, email, phone, membership_date } = req.body;
+    const { id, name, email, phone, membership_date } = req.body;
     if (!name || !email || !phone || !membership_date) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
-    const query = 'INSERT INTO LibraryMembers (name, email, phone, membership_date) VALUES (?, ?, ?, ?)';
-    const values = [name, email, phone, membership_date];
+    const query = 'INSERT INTO LibraryMembers (member_id, name, email, phone, membership_date) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=?, email=?, phone=?, membership_date=?';
+    const values = [id, name, email, phone, membership_date, name, email, phone, membership_date];
 
     req.pool.getConnection((error, connection) => {
         if (error) {
@@ -202,10 +202,10 @@ router.get('/loans', (req, res) => {
 });
 
 router.post('/loans', (req, res) => {
-    const { book_id, member_id, loan_date, due_date } = req.body;
-    const query = 'INSERT INTO BookLoans (book_id, member_id, loan_date, due_date) VALUES (?, ?, ?, ?)';
+    const { id, book_id, member_id, loan_date, due_date } = req.body;
+    const query = 'INSERT INTO BookLoans (loan_id, book_id, member_id, loan_date, due_date) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE book_id=?, member_id=?, loan_date=?, due_date=?';
 
-    const values = [book_id, member_id, loan_date, due_date];
+    const values = [id, book_id, member_id, loan_date, due_date, book_id, member_id, loan_date, due_date];
 
     req.pool.getConnection((error, connection) => {
         if (error) {
@@ -293,13 +293,13 @@ router.get('/publishers', (req, res) => {
 });
 
 router.post('/publishers', (req, res) => {
-    const { name, address, contact_email } = req.body;
+    const { id, name, address, contact_email } = req.body;
     if (!name || !address || !contact_email) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
-    const query = 'INSERT INTO Publishers (name, address, contact_email) VALUES (?, ?, ?)';
-    const values = [name, address, contact_email];
+    const query = 'INSERT INTO Publishers (publisher_id, name, address, contact_email) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=?, address=?, contact_email=?';
+    const values = [id, name, address, contact_email, name, address, contact_email];
 
     req.pool.getConnection((error, connection) => {
         if (error) {
@@ -365,14 +365,14 @@ router.get('/authors', (req, res) => {
 });
 
 router.post('/authors', (req, res) => {
-    const { name, birth_year, nationality } = req.body;
+    const { id, name, birth_year, nationality } = req.body;
     console.log(req.body)
     if (!name || !birth_year || !nationality) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
-    const query = 'INSERT INTO Authors (name, birth_year, nationality) VALUES (?, ?, ?)';
-    const values = [name, birth_year, nationality];
+    const query = 'INSERT INTO Authors (author_id, name, birth_year, nationality) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=?, birth_year=?, nationality=?';
+    const values = [id, name, birth_year, nationality, name, birth_year, nationality];
 
     req.pool.getConnection((error, connection) => {
         if (error) {
