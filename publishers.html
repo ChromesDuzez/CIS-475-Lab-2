@@ -80,7 +80,7 @@
             const response = await fetch('/api/publishers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, address, contact_email }),
+                body: JSON.stringify({ id, name, address, contact_email }),
             });
 
             const result = await response.json();

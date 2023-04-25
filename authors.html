@@ -80,7 +80,7 @@
             const response = await fetch('/api/authors', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, birth_year, nationality }),
+                body: JSON.stringify({ id, name, birth_year, nationality }),
             });
 
             const result = await response.json();

@@ -177,7 +177,7 @@
             const response = await fetch('/api/loans', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ book_id, member_id, loan_date, due_date }),
+                body: JSON.stringify({ id, book_id, member_id, loan_date, due_date }),
             });
 
             const result = await response.json();

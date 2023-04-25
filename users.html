@@ -105,7 +105,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ name, email, phone, membership_date })
+                body: JSON.stringify({ id, name, email, phone, membership_date })
             });
 
             const result = await response.json();
